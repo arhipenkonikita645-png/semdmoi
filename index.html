@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat 7th Grade</title>
+    <style>
+        /* Базовые стили из предыдущего ответа */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background-color: #0e1621; color: #fff; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Модальное окно авторизации */
+        #auth-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0e1621; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 1000;
+        }
+        .auth-box { background: #17212b; padding: 30px; border-radius: 10px; width: 300px; text-align: center;}
+        .auth-box input { width: 100%; margin: 10px 0; padding: 10px; border-radius: 5px; border: none; background: #242f3d; color: #fff;}
+        .auth-box button { width: 100%; padding: 10px; background: #2b5278; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px;}
+        .auth-box button:hover { background: #386796; }
+        .toggle-auth { color: #7f91a4; font-size: 12px; margin-top: 15px; cursor: pointer; }
+
+        /* Чат */
+        .sidebar { width: 300px; background-color: #17212b; border-right: 1px solid #000; display: flex; flex-direction: column; }
+        .chat-item { display: flex; align-items: center; padding: 15px; cursor: pointer; background-color: #2b5278; }
+        .avatar { width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #e74c3c, #f39c12); margin-right: 15px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .chat-area { flex: 1; display: flex; flex-direction: column; background-color: #0e1621; }
+        .chat-header { padding: 15px; background-color: #17212b; border-bottom: 1px solid #000; font-weight: bold; }
+        .messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .message { max-width: 60%; padding: 10px 15px; border-radius: 15px; font-size: 14px; }
+        .message.received { background-color: #182533; align-self: flex-start; border-bottom-left-radius: 0; }
+        .message.sent { background-color: #2b5278; align-self: flex-end; border-bottom-right-radius: 0; }
+        .message-input { padding: 15px; background-color: #17212b; display: flex; gap: 10px; }
+        .message-input input { flex: 1; padding: 12px; border-radius: 10px; border: none; background-color: #242f3d; color: #fff; }
+        .message-input button { background-color: #2b5278; color: #fff; border: none; padding: 0 20px; border-radius: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <!-- Окно Входа / Регистрации -->
+    <div id="auth-modal">
+        <div class="auth-box" id="login-box">
+            <h2>Вход</h2>
+            <input type="text" id="login-user" placeholder="Имя (никнейм)">
+            <input type="password" id="login-pass" placeholder="Пароль">
+            <button onclick="login()">Войти</button>
+            <p class="toggle-auth" onclick="toggleAuth()">Нет аккаунта? Зарегистрируйся</p>
+        </div>
+        <div class="auth-box" id="reg-box" style="display: none;">
+            <h2>Регистрация</h2>
+            <input type="text" id="reg-user" placeholder="Имя (никнейм)">
+            <input type="email" id="reg-email" placeholder="Email">
+            <input type="password" id="reg-pass" placeholder="Пароль">
+            <button onclick="register()">Создать аккаунт</button>
+            <p class="toggle-auth" onclick="toggleAuth()">Уже есть аккаунт? Войти</p>
+        </div>
+    </div>
+
+    <!-- Основной интерфейс -->
+    <aside class="sidebar">
+        <div class="chat-item">
+            <div class="avatar">7️⃣</div>
+            <div>
+                <h4>Параллель 7-х классов</h4>
+                <p style="font-size: 12px; color: #7f91a4;">Общий чат</p>
+            </div>
+        </div>
+    </aside>
+
+    <main class="chat-area">
+        <div class="chat-header">Параллель 7-х классов</div>
+        <div class="messages" id="messages-container"></div>
+        <div class="message-input">
+            <input type="text" id="msg-input" placeholder="Написать сообщение..." onkeypress="handleEnter(event)">
+            <button onclick="sendMessage()">Отправить</button>
+        </div>
+    </main>
+
+    <script>
+        // ВАЖНО: ЗАМЕНИ 'твой_логин' НА СВОЙ ЛОГИН В PYTHONANYWHERE
+        const API_URL = 'https://maonteel.pythonanywhere.com'; 
+        let currentUser = null;
+
+        function toggleAuth() {
+            const loginBox = document.getElementById('login-box');
+            const regBox = document.getElementById('reg-box');
+            if (loginBox.style.display === 'none') {
+                loginBox.style.display = 'block';
+                regBox.style.display = 'none';
+            } else {
+                loginBox.style.display = 'none';
+                regBox.style.display = 'block';
+            }
+        }
+
+        async function register() {
+            const user = document.getElementById('reg-user').value;
+            const email = document.getElementById('reg-email').value;
+            const pass = document.getElementById('reg-pass').value;
+
+            const res = await fetch(`${API_URL}/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, email: email, password: pass })
+            });
+            const data = await res.json();
+            alert(data.message);
+            if (data.success) toggleAuth();
+        }
+
+        async function login() {
+            const user = document.getElementById('login-user').value;
+            const pass = document.getElementById('login-pass').value;
+
+            const res = await fetch(`${API_URL}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, password: pass })
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                currentUser = data.username;
+                document.getElementById('auth-modal').style.display = 'none';
+                fetchMessages(); // Загружаем сразу
+                setInterval(fetchMessages, 2000); // Настраиваем опрос каждые 2 секунды
+            } else {
+                alert(data.message);
+            }
+        }
+
+        async function fetchMessages() {
+            if (!currentUser) return;
+            const res = await fetch(`${API_URL}/messages`);
+            const messages = await res.json();
+            
+            const container = document.getElementById('messages-container');
+            container.innerHTML = ''; // Очищаем и перерисовываем
+            
+            messages.forEach(msg => {
+                const div = document.createElement('div');
+                div.className = `message ${msg.username === currentUser ? 'sent' : 'received'}`;
+                div.innerHTML = msg.username === currentUser ? msg.text : `<b>${msg.username}:</b><br>${msg.text}`;
+                container.appendChild(div);
+            });
+            // Прокрутка вниз
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('msg-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            await fetch(`${API_URL}/messages`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser, text: text })
+            });
+
+            input.value = '';
+            fetchMessages();
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+    </script>
+</body>
+</html>
