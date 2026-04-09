@@ -2,895 +2,2021 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Messenger (Telegram UI)</title>
-    <!-- Подключение FontAwesome для профессиональных иконок -->
+    <!-- Мета-тег для идеального отображения на мобильных устройствах без случайного масштабирования -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="School Messenger - Профессиональная платформа для общения учеников.">
+    <meta name="theme-color" content="#0e1621">
+    
+    <title>School Messenger (Telegram UI) | Pro Version</title>
+    
+    <!-- Подключение библиотеки FontAwesome для иконок -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Использование системных шрифтов в стиле Telegram Desktop -->
+    
+    <!-- Системные шрифты Roboto в стиле Telegram Desktop -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     
+    <!-- 
+      ==========================================================================
+                                ТАБЛИЦА СТИЛЕЙ (CSS)
+      ========================================================================== 
+      Вся стилизация разбита на логические блоки для удобства поддержки.
+    -->
     <style>
-        /* ==========================================================================
-           CSS ПЕРЕМЕННЫЕ (TELEGRAM DARK THEME)
-           ========================================================================== */
+        /* --------------------------------------------------------------------------
+           1. CSS ПЕРЕМЕННЫЕ (THEME CONFIGURATION)
+           -------------------------------------------------------------------------- */
         :root {
-            --bg-main: #0e1621;         /* Основной фон чата */
-            --bg-sidebar: #17212b;      /* Фон боковой панели */
-            --bg-hover: #202b36;        /* Цвет наведения в списках */
-            --bg-active: #2b5278;       /* Активный чат в списке */
-            --msg-in: #182533;          /* Входящее сообщение (баббл) */
-            --msg-out: #2b5278;         /* Исходящее сообщение (баббл) */
-            --text-main: #ffffff;       /* Основной текст */
-            --text-muted: #7f91a4;      /* Второстепенный текст, время */
-            --accent: #5288c1;          /* Акцентный цвет (кнопки, ссылки) */
-            --accent-hover: #4175b0;    /* Акцентный цвет при наведении */
-            --border-color: #00000030;  /* Цвет разделителей */
-            --input-bg: #17212b;        /* Фон поля ввода */
-            --error-color: #e53935;     /* Цвет ошибки */
-            --font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+            /* Цветовая палитра: Тёмная тема (Telegram Dark) */
+            --color-bg-base: #0e1621;
+            --color-bg-sidebar: #17212b;
+            --color-bg-hover: #202b36;
+            --color-bg-active: #2b5278;
+            --color-bg-input: #17212b;
+            --color-bg-overlay: rgba(0, 0, 0, 0.6);
+            
+            /* Цвета сообщений */
+            --color-msg-in: #182533;
+            --color-msg-out: #2b5278;
+            
+            /* Типографика и текст */
+            --color-text-main: #ffffff;
+            --color-text-muted: #7f91a4;
+            --color-text-link: #64b5ef;
+            
+            /* Акцентные цвета и статусы */
+            --color-accent-primary: #5288c1;
+            --color-accent-hover: #4175b0;
+            --color-danger: #e53935;
+            --color-success: #4caf50;
+            --color-warning: #ffb300;
+            
+            /* Границы и разделители */
+            --color-border-subtle: rgba(0, 0, 0, 0.2);
+            --color-border-light: rgba(255, 255, 255, 0.05);
+            
+            /* Тени */
+            --shadow-sm: 0 2px 5px rgba(0,0,0,0.2);
+            --shadow-md: 0 5px 15px rgba(0,0,0,0.3);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,0.5);
+            
+            /* Анимации */
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.3s ease;
+            --transition-slow: 0.5s ease;
+            
+            /* Шрифты */
+            --font-family-base: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            
+            /* Размеры */
+            --sidebar-width: 320px;
+            --header-height: 60px;
+            --input-area-height: 70px;
+            --border-radius-sm: 6px;
+            --border-radius-md: 12px;
+            --border-radius-lg: 20px;
+            --border-radius-round: 50%;
         }
 
-        /* ==========================================================================
-           БАЗОВЫЕ НАСТРОЙКИ
-           ========================================================================== */
-        * {
+        /* --------------------------------------------------------------------------
+           2. СБРОС СТИЛЕЙ И БАЗОВЫЕ НАСТРОЙКИ (RESET & BASE)
+           -------------------------------------------------------------------------- */
+        *, *::before, *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent; /* Убираем синее выделение при тапе на мобилках */
         }
         
-        body, html {
+        html, body {
+            width: 100%;
             height: 100%;
-            font-family: var(--font-family);
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            overflow: hidden;
+            font-family: var(--font-family-base);
+            background-color: var(--color-bg-base);
+            color: var(--color-text-main);
+            overflow: hidden; /* Предотвращаем скролл всей страницы */
+            font-size: 15px;
+            line-height: 1.5;
         }
 
-        /* ==========================================================================
-           ЭКРАН АВТОРИЗАЦИИ / РЕГИСТРАЦИИ
-           ========================================================================== */
-        #auth-screen {
+        /* Кастомный скроллбар */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: var(--border-radius-lg);
+            transition: background-color var(--transition-normal);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* --------------------------------------------------------------------------
+           3. ТИПОГРАФИКА (TYPOGRAPHY)
+           -------------------------------------------------------------------------- */
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 500;
+            margin-bottom: 1rem;
+            color: var(--color-text-main);
+        }
+        
+        p {
+            margin-bottom: 1rem;
+        }
+
+        a {
+            color: var(--color-accent-primary);
+            text-decoration: none;
+            transition: color var(--transition-fast);
+        }
+
+        a:hover {
+            color: var(--color-accent-hover);
+        }
+
+        /* --------------------------------------------------------------------------
+           4. КОМПОНЕНТЫ: АВАТАРКИ И ИКОНКИ (COMPONENTS: AVATARS & ICONS)
+           -------------------------------------------------------------------------- */
+        .avatar-base {
+            border-radius: var(--border-radius-round);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #ffffff;
+            font-weight: bold;
+            flex-shrink: 0;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .avatar-lg {
+            width: 100px;
+            height: 100px;
+            font-size: 36px;
+        }
+
+        .avatar-md {
+            width: 48px;
+            height: 48px;
+            font-size: 20px;
+        }
+
+        .avatar-sm {
+            width: 40px;
+            height: 40px;
+            font-size: 16px;
+        }
+
+        .avatar-xs {
+            width: 32px;
+            height: 32px;
+            font-size: 14px;
+        }
+
+        /* Предустановленный градиент для общих чатов */
+        .gradient-global {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            font-size: 1.2rem;
+            width: 40px;
+            height: 40px;
+            border-radius: var(--border-radius-round);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all var(--transition-fast);
+        }
+
+        .icon-btn:hover {
+            color: var(--color-text-main);
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .icon-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* --------------------------------------------------------------------------
+           5. КОМПОНЕНТЫ: КНОПКИ И ФОРМЫ (COMPONENTS: BUTTONS & FORMS)
+           -------------------------------------------------------------------------- */
+        .btn-primary {
+            width: 100%;
+            padding: 14px 20px;
+            background-color: var(--color-accent-primary);
+            color: #ffffff;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color var(--transition-fast), transform var(--transition-fast);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--color-accent-hover);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+        
+        .btn-primary:disabled {
+            background-color: var(--color-text-muted);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .input-control {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            background-color: var(--color-bg-base);
+            border: 1px solid var(--color-border-light);
+            color: var(--color-text-main);
+            border-radius: var(--border-radius-sm);
+            font-size: 16px;
+            outline: none;
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+        }
+
+        .input-control:focus {
+            border-color: var(--color-accent-primary);
+            box-shadow: 0 0 0 2px rgba(82, 136, 193, 0.2);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-text-muted);
+            font-size: 18px;
+            pointer-events: none;
+        }
+
+        /* --------------------------------------------------------------------------
+           6. СИСТЕМА УВЕДОМЛЕНИЙ (TOAST NOTIFICATIONS)
+           -------------------------------------------------------------------------- */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast-message {
+            background-color: var(--color-bg-sidebar);
+            color: var(--color-text-main);
+            padding: 12px 24px;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-md);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: toastIn 0.3s forwards;
+            pointer-events: auto;
+            border-left: 4px solid var(--color-accent-primary);
+        }
+
+        .toast-message.success { border-left-color: var(--color-success); }
+        .toast-message.error { border-left-color: var(--color-danger); }
+        .toast-message.warning { border-left-color: var(--color-warning); }
+
+        @keyframes toastIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes toastOut {
+            to { opacity: 0; transform: translateY(-20px); }
+        }
+
+        /* --------------------------------------------------------------------------
+           7. ЭКРАН АВТОРИЗАЦИИ (AUTH SCREEN)
+           -------------------------------------------------------------------------- */
+        .auth-screen-layout {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: var(--bg-main);
-            z-index: 1000;
+            width: 100vw;
+            background-color: var(--color-bg-base);
             position: absolute;
-            width: 100%;
             top: 0;
             left: 0;
-            transition: opacity 0.5s ease;
+            z-index: 1000;
+            transition: opacity var(--transition-slow);
         }
 
-        .auth-container {
-            background-color: var(--bg-sidebar);
-            width: 400px;
+        .auth-card {
+            background-color: var(--color-bg-sidebar);
+            width: 100%;
+            max-width: 420px;
             padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-lg);
             text-align: center;
+            transform: translateY(0);
+            transition: transform var(--transition-normal);
         }
 
-        .auth-logo {
-            font-size: 64px;
-            color: var(--accent);
-            margin-bottom: 20px;
+        .auth-card-logo {
+            font-size: 72px;
+            color: var(--color-accent-primary);
+            margin-bottom: 25px;
+            animation: pulseLogo 2s infinite ease-in-out;
         }
 
-        .auth-container h2 {
+        @keyframes pulseLogo {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .auth-title {
             margin-bottom: 30px;
             font-weight: 500;
+            font-size: 24px;
+            letter-spacing: 0.5px;
         }
 
-        .input-group {
-            margin-bottom: 20px;
-            position: relative;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 15px;
-            background-color: var(--bg-main);
-            border: 1px solid transparent;
-            color: var(--text-main);
-            border-radius: 8px;
-            font-size: 16px;
-            outline: none;
-            transition: border 0.3s;
-        }
-
-        .input-group input:focus {
-            border-color: var(--accent);
-        }
-
-        .auth-btn {
-            width: 100%;
-            padding: 15px;
-            background-color: var(--accent);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
+        .auth-toggle-link {
+            margin-top: 25px;
+            color: var(--color-text-muted);
+            font-size: 14px;
             cursor: pointer;
+            display: inline-block;
+            transition: color var(--transition-fast);
+        }
+
+        .auth-toggle-link span {
+            color: var(--color-accent-primary);
             font-weight: 500;
-            transition: background 0.3s;
         }
 
-        .auth-btn:hover {
-            background-color: var(--accent-hover);
+        .auth-toggle-link:hover {
+            color: var(--color-text-main);
         }
 
-        .auth-switch {
-            margin-top: 20px;
-            color: var(--text-muted);
-            font-size: 14px;
-            cursor: pointer;
-        }
-
-        .auth-switch span {
-            color: var(--accent);
-        }
-
-        .error-msg {
-            color: var(--error-color);
-            margin-bottom: 15px;
-            font-size: 14px;
+        /* --------------------------------------------------------------------------
+           8. ОСНОВНОЙ КАРКАС ПРИЛОЖЕНИЯ (APP LAYOUT)
+           -------------------------------------------------------------------------- */
+        .app-screen-layout {
             display: none;
-        }
-
-        /* ==========================================================================
-           ОСНОВНОЙ ИНТЕРФЕЙС МЕССЕНДЖЕРА (LAYOUT)
-           ========================================================================== */
-        #app-screen {
-            display: none; /* Скрыто до авторизации */
-            height: 100%;
-            width: 100%;
+            height: 100vh;
+            width: 100vw;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
 
         .app-container {
             display: flex;
             height: 100%;
             width: 100%;
-        }
-
-        /* БОКОВАЯ ПАНЕЛЬ */
-        .sidebar {
-            width: 320px;
-            min-width: 320px;
-            background-color: var(--bg-sidebar);
-            border-right: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sidebar-header {
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .sidebar-header .my-profile {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 500;
-        }
-
-        .logout-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 18px;
-            transition: color 0.2s;
-        }
-
-        .logout-btn:hover {
-            color: var(--text-main);
-        }
-
-        .search-bar {
-            padding: 10px 15px;
-            background-color: var(--bg-sidebar);
-        }
-
-        .search-bar input {
-            width: 100%;
-            background-color: var(--bg-main);
-            border: none;
-            padding: 10px 15px;
-            border-radius: 20px;
-            color: var(--text-main);
-            outline: none;
-        }
-
-        .chat-list {
-            flex-grow: 1;
-            overflow-y: auto;
-        }
-
-        /* Кастомный скроллбар */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
-
-        .chat-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 15px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .chat-item:hover {
-            background-color: var(--bg-hover);
-        }
-
-        .chat-item.active {
-            background-color: var(--bg-active);
-        }
-
-        .avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 20px;
-            font-weight: bold;
-            color: white;
-            margin-right: 15px;
-            flex-shrink: 0;
-            background: linear-gradient(135deg, #f39c12, #d35400); /* Базовый градиент */
-        }
-        
-        .avatar-global {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-        }
-
-        .chat-info {
-            flex-grow: 1;
+            position: relative;
             overflow: hidden;
         }
 
-        .chat-name {
+        /* --------------------------------------------------------------------------
+           9. БОКОВАЯ ПАНЕЛЬ: СПИСОК ЧАТОВ (SIDEBAR & CHAT LIST)
+           -------------------------------------------------------------------------- */
+        .sidebar-panel {
+            width: var(--sidebar-width);
+            min-width: var(--sidebar-width);
+            height: 100%;
+            background-color: var(--color-bg-sidebar);
+            border-right: 1px solid var(--color-border-subtle);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            z-index: 10;
+        }
+
+        .sidebar-header {
+            height: var(--header-height);
+            min-height: var(--header-height);
+            padding: 0 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--color-border-subtle);
+            background-color: var(--color-bg-sidebar);
+        }
+
+        .user-profile-summary {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: var(--border-radius-sm);
+            transition: background-color var(--transition-fast);
+        }
+
+        .user-profile-summary:hover {
+            background-color: var(--color-bg-hover);
+        }
+
+        .sidebar-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .search-container {
+            padding: 10px 15px;
+            background-color: var(--color-bg-sidebar);
+            border-bottom: 1px solid var(--color-border-subtle);
+        }
+
+        .search-input {
+            width: 100%;
+            background-color: var(--color-bg-base);
+            border: 1px solid transparent;
+            padding: 10px 15px 10px 40px;
+            border-radius: var(--border-radius-lg);
+            color: var(--color-text-main);
+            outline: none;
+            font-size: 14px;
+            transition: border-color var(--transition-fast);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%237f91a4' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 12px 50%;
+        }
+
+        .search-input:focus {
+            border-color: var(--color-accent-primary);
+        }
+
+        .chat-list-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 5px 0;
+        }
+
+        .chat-list-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color var(--transition-fast);
+            position: relative;
+        }
+
+        .chat-list-item:hover {
+            background-color: var(--color-bg-hover);
+        }
+
+        .chat-list-item.is-active {
+            background-color: var(--color-bg-active);
+        }
+
+        .chat-list-info {
+            flex-grow: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .chat-list-name {
             font-weight: 500;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
+            font-size: 15px;
         }
 
-        .chat-status {
+        .chat-list-status {
             font-size: 13px;
-            color: var(--text-muted);
+            color: var(--color-text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .chat-list-item.is-active .chat-list-status {
+            color: rgba(255, 255, 255, 0.7);
         }
 
-        /* ОСНОВНАЯ ОБЛАСТЬ ЧАТА */
-        .chat-area {
+        /* --------------------------------------------------------------------------
+           10. ОБЛАСТЬ ЧАТА И СООБЩЕНИЯ (CHAT AREA & MESSAGES)
+           -------------------------------------------------------------------------- */
+        .chat-area-panel {
             flex-grow: 1;
+            height: 100%;
             display: flex;
             flex-direction: column;
-            background-color: var(--bg-main);
-            /* Паттерн фона как в телеграме (опционально) */
-            background-image: radial-gradient(circle, rgba(255,255,255,0.02) 1px, transparent 1px);
-            background-size: 20px 20px;
+            background-color: var(--color-bg-base);
+            /* Узнаваемый паттерн на фоне как в Telegram */
+            background-image: 
+                radial-gradient(circle at center, rgba(255,255,255,0.03) 1px, transparent 1px),
+                radial-gradient(circle at center, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+            position: relative;
+            z-index: 5;
         }
 
         .chat-header {
-            padding: 15px 20px;
-            background-color: var(--bg-sidebar);
-            border-bottom: 1px solid var(--border-color);
+            height: var(--header-height);
+            min-height: var(--header-height);
+            padding: 0 20px;
+            background-color: var(--color-bg-sidebar);
+            border-bottom: 1px solid var(--color-border-subtle);
             display: flex;
             align-items: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            z-index: 2;
         }
 
-        .chat-header .chat-name {
-            font-size: 18px;
-            margin-bottom: 0;
+        .mobile-back-button {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--color-text-main);
+            font-size: 20px;
+            margin-right: 15px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: var(--border-radius-round);
         }
 
-        .messages-container {
+        .chat-header-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .chat-header-title {
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 1.2;
+        }
+
+        .chat-header-subtitle {
+            font-size: 13px;
+            color: var(--color-accent-primary);
+        }
+
+        .messages-scroll-area {
             flex-grow: 1;
             padding: 20px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
+            gap: 12px;
+            scroll-behavior: smooth;
         }
 
-        /* Анимация появления сообщения */
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .message-wrapper {
+        /* Разделитель по дате */
+        .date-divider {
             display: flex;
-            margin-bottom: 10px;
+            justify-content: center;
+            margin: 15px 0;
+            position: relative;
+        }
+
+        .date-divider-text {
+            background-color: rgba(0, 0, 0, 0.3);
+            color: #ffffff;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        /* Обертки сообщений */
+        .message-row {
+            display: flex;
             width: 100%;
-            animation: slideIn 0.3s ease-out forwards;
+            animation: messagePopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            opacity: 0;
+            transform: translateY(15px) scale(0.95);
+            transform-origin: bottom center;
         }
 
-        .message-wrapper.in {
-            justify-content: flex-start;
+        @keyframes messagePopIn {
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        .message-wrapper.out {
-            justify-content: flex-end;
-        }
+        .message-row.is-in { justify-content: flex-start; }
+        .message-row.is-out { justify-content: flex-end; }
 
-        .message {
+        /* Сами бабблы */
+        .message-bubble {
             max-width: 65%;
             padding: 8px 12px;
-            border-radius: 12px;
+            border-radius: var(--border-radius-md);
             position: relative;
             word-wrap: break-word;
             line-height: 1.4;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Бабблы Telegram */
-        .message-wrapper.in .message {
-            background-color: var(--msg-in);
+        /* Специфичные скругления для бабблов (хвостики) */
+        .message-row.is-in .message-bubble {
+            background-color: var(--color-msg-in);
             border-bottom-left-radius: 4px;
         }
 
-        .message-wrapper.out .message {
-            background-color: var(--msg-out);
+        .message-row.is-out .message-bubble {
+            background-color: var(--color-msg-out);
             border-bottom-right-radius: 4px;
         }
 
-        .msg-sender {
+        .message-sender-name {
             font-size: 13px;
             font-weight: 500;
-            color: var(--accent);
-            margin-bottom: 4px;
+            color: var(--color-accent-primary);
+            margin-bottom: 2px;
+            cursor: pointer;
         }
 
-        .msg-text {
+        .message-sender-name:hover {
+            text-decoration: underline;
+        }
+
+        .message-content {
             font-size: 15px;
+            white-space: pre-wrap;
         }
 
-        .msg-time {
+        .message-meta {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 4px;
+            margin-top: 4px;
+            float: right;
+            margin-left: 15px;
+        }
+
+        .message-time {
             font-size: 11px;
             color: rgba(255, 255, 255, 0.5);
-            float: right;
-            margin-top: 5px;
-            margin-left: 10px;
-            line-height: 1.5;
+            line-height: 1;
         }
 
-        /* ПОЛЕ ВВОДА СООБЩЕНИЯ */
-        .input-area {
-            padding: 15px 20px;
-            background-color: var(--bg-sidebar);
+        .message-status-tick {
+            font-size: 10px;
+            color: #64b5ef;
+        }
+
+        /* Пустое состояние чата */
+        .empty-state-container {
             display: flex;
+            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            gap: 15px;
+            height: 100%;
+            color: var(--color-text-muted);
+            text-align: center;
+            padding: 20px;
+            opacity: 0.7;
         }
 
-        .message-input-wrapper {
-            flex-grow: 1;
-            background-color: var(--bg-main);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            padding: 5px 15px;
-        }
-
-        .message-input-wrapper input {
-            width: 100%;
-            background: none;
-            border: none;
-            color: var(--text-main);
-            padding: 10px 0;
-            font-size: 15px;
-            outline: none;
-        }
-
-        .send-btn {
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            width: 46px;
-            height: 46px;
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            background: rgba(255,255,255,0.05);
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
+        }
+
+        /* --------------------------------------------------------------------------
+           11. ПОЛЕ ВВОДА СООБЩЕНИЯ (MESSAGE INPUT AREA)
+           -------------------------------------------------------------------------- */
+        .input-footer {
+            min-height: var(--input-area-height);
+            padding: 10px 20px;
+            background-color: var(--color-bg-sidebar);
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            z-index: 2;
+        }
+
+        .attachment-btn {
+            background: none;
+            border: none;
+            color: var(--color-text-muted);
+            font-size: 24px;
             cursor: pointer;
-            font-size: 18px;
-            transition: transform 0.2s, background 0.2s;
+            padding: 10px 5px;
+            transition: color var(--transition-fast);
         }
 
-        .send-btn:hover {
-            background-color: var(--accent-hover);
-            transform: scale(1.05);
+        .attachment-btn:hover { color: var(--color-accent-primary); }
+
+        .compose-wrapper {
+            flex-grow: 1;
+            background-color: var(--color-bg-base);
+            border-radius: var(--border-radius-lg);
+            display: flex;
+            align-items: flex-end;
+            padding: 2px 15px;
+            border: 1px solid transparent;
+            transition: border-color var(--transition-fast);
+        }
+        
+        .compose-wrapper:focus-within {
+            border-color: rgba(82, 136, 193, 0.5);
         }
 
-        /* Состояние пустого экрана (до выбора чата) */
-        .empty-chat {
+        .compose-input {
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--color-text-main);
+            padding: 14px 0;
+            font-size: 15px;
+            outline: none;
+            resize: none;
+            max-height: 150px;
+            font-family: var(--font-family-base);
+            overflow-y: auto;
+        }
+        
+        .compose-input::placeholder {
+            color: var(--color-text-muted);
+        }
+
+        .emoji-btn {
+            background: none;
+            border: none;
+            color: var(--color-text-muted);
+            font-size: 22px;
+            cursor: pointer;
+            padding: 12px 5px;
+            transition: color var(--transition-fast);
+        }
+
+        .emoji-btn:hover { color: var(--color-accent-primary); }
+
+        .send-message-btn {
+            background-color: var(--color-accent-primary);
+            color: white;
+            border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: var(--border-radius-round);
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100%;
-            color: var(--text-muted);
-            font-size: 16px;
-            background-color: var(--bg-main);
-            border-radius: 20px;
-            margin: 20px;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all var(--transition-fast);
+            flex-shrink: 0;
+            margin-bottom: 2px;
+            box-shadow: 0 2px 5px rgba(82, 136, 193, 0.3);
         }
 
+        .send-message-btn:hover {
+            background-color: var(--color-accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(82, 136, 193, 0.4);
+        }
+        
+        .send-message-btn:active {
+            transform: translateY(0);
+        }
+
+        /* --------------------------------------------------------------------------
+           12. МОДАЛЬНЫЕ ОКНА И НАСТРОЙКИ (MODALS & SETTINGS)
+           -------------------------------------------------------------------------- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: var(--color-bg-overlay);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+            opacity: 0;
+            transition: opacity var(--transition-normal);
+        }
+
+        .modal-overlay.is-visible {
+            opacity: 1;
+        }
+
+        .modal-content-box {
+            background: var(--color-bg-sidebar);
+            width: 90%;
+            max-width: 380px;
+            padding: 35px 30px;
+            border-radius: var(--border-radius-md);
+            text-align: center;
+            position: relative;
+            box-shadow: var(--shadow-lg);
+            transform: scale(0.9);
+            transition: transform var(--transition-normal);
+        }
+
+        .modal-overlay.is-visible .modal-content-box {
+            transform: scale(1);
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--color-text-muted);
+            font-size: 20px;
+            transition: color var(--transition-fast);
+            padding: 5px;
+        }
+
+        .modal-close-btn:hover { color: var(--color-danger); }
+
+        .modal-title {
+            margin-bottom: 10px;
+            font-size: 22px;
+        }
+
+        .modal-subtitle {
+            color: var(--color-text-muted);
+            font-size: 13px;
+            margin-bottom: 25px;
+        }
+
+        /* Загрузка аватарки */
+        .avatar-upload-wrapper {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 25px;
+            cursor: pointer;
+            border-radius: var(--border-radius-round);
+            box-shadow: var(--shadow-md);
+        }
+
+        .avatar-upload-preview {
+            width: 100%;
+            height: 100%;
+            border-radius: var(--border-radius-round);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 48px;
+            color: white;
+            background-size: cover;
+            background-position: center;
+            transition: filter var(--transition-fast);
+        }
+
+        .avatar-upload-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            border-radius: var(--border-radius-round);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity var(--transition-normal);
+            color: white;
+            font-size: 32px;
+        }
+
+        .avatar-upload-wrapper:hover .avatar-upload-preview {
+            filter: blur(2px);
+        }
+
+        .avatar-upload-wrapper:hover .avatar-upload-overlay {
+            opacity: 1;
+        }
+
+        #hidden-file-input { display: none; }
+
+        /* --------------------------------------------------------------------------
+           13. СКЕЛЕТНАЯ ЗАГРУЗКА (SKELETON LOADERS)
+           -------------------------------------------------------------------------- */
+        .skeleton {
+            background: linear-gradient(90deg, #202b36 25%, #2a3847 50%, #202b36 75%);
+            background-size: 200% 100%;
+            animation: skeletonLoading 1.5s infinite;
+            border-radius: 4px;
+        }
+
+        @keyframes skeletonLoading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .skeleton-avatar { width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0; }
+        .skeleton-text-line { height: 12px; margin-bottom: 8px; width: 100%; }
+        .skeleton-text-short { width: 60%; }
+
+        /* --------------------------------------------------------------------------
+           14. АДАПТАЦИЯ ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ (MOBILE RESPONSIVENESS)
+           -------------------------------------------------------------------------- */
+        @media screen and (max-width: 768px) {
+            .auth-card {
+                width: 90%;
+                padding: 30px 20px;
+            }
+            
+            .sidebar-panel {
+                width: 100%;
+                position: absolute;
+                left: 0;
+                top: 0;
+                height: 100%;
+                z-index: 10;
+            }
+            
+            .chat-area-panel {
+                width: 100%;
+                position: absolute;
+                left: 0;
+                top: 0;
+                height: 100%;
+                transform: translateX(100%); /* Чат скрыт за правой границей экрана */
+                transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+                z-index: 20; /* Чат должен перекрывать сайдбар при открытии */
+            }
+            
+            /* СОСТОЯНИЕ: Открыт мобильный чат */
+            .app-container.is-chat-active .sidebar-panel {
+                transform: translateX(-30%); /* Сайдбар немного уезжает влево */
+                opacity: 0.3; /* И затемняется */
+            }
+            
+            .app-container.is-chat-active .chat-area-panel {
+                transform: translateX(0); /* Чат выезжает на 100% экрана */
+            }
+            
+            .mobile-back-button {
+                display: block; /* Показываем кнопку назад */
+            }
+            
+            .message-bubble {
+                max-width: 85%; /* На телефонах бабблы шире */
+            }
+            
+            .input-footer {
+                padding: 8px 10px;
+                gap: 8px;
+            }
+            
+            .compose-wrapper {
+                padding: 2px 10px;
+            }
+            
+            .send-message-btn {
+                width: 42px;
+                height: 42px;
+                font-size: 16px;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <!-- =======================================================================
-         ЭКРАН ВХОДА И РЕГИСТРАЦИИ
-         ======================================================================= -->
-    <div id="auth-screen">
-        <div class="auth-container">
-            <div class="auth-logo"><i class="fab fa-telegram-plane"></i></div>
-            <h2 id="auth-title">Вход в School Chat</h2>
-            
-            <div id="auth-error" class="error-msg">Ошибка авторизации</div>
+    <!-- 
+      ==========================================================================
+                                HTML СТРУКТУРА ПРИЛОЖЕНИЯ
+      ========================================================================== 
+    -->
 
-            <div class="input-group">
-                <input type="text" id="username" placeholder="Имя пользователя (Логин)" autocomplete="off">
+    <!-- КОНТЕЙНЕР ДЛЯ УВЕДОМЛЕНИЙ -->
+    <div id="toast-container" aria-live="polite"></div>
+
+    <!-- ЭКРАН 1: АВТОРИЗАЦИЯ И РЕГИСТРАЦИЯ -->
+    <main id="auth-screen" class="auth-screen-layout">
+        <div class="auth-card">
+            <div class="auth-card-logo">
+                <i class="fab fa-telegram-plane"></i>
             </div>
-            <div class="input-group">
-                <input type="password" id="password" placeholder="Пароль">
-            </div>
+            <h1 id="auth-title" class="auth-title">Вход в School Chat</h1>
             
-            <button class="auth-btn" id="auth-submit-btn" onclick="handleAuth()">Войти</button>
+            <!-- Форма -->
+            <form id="auth-form" onsubmit="event.preventDefault(); AuthManager.submit();">
+                <div class="input-wrapper">
+                    <i class="fas fa-user input-icon"></i>
+                    <input type="text" id="auth-username" class="input-control" placeholder="Имя пользователя (Логин)" required autocomplete="username">
+                </div>
+                
+                <div class="input-wrapper">
+                    <i class="fas fa-lock input-icon"></i>
+                    <input type="password" id="auth-password" class="input-control" placeholder="Пароль" required autocomplete="current-password">
+                </div>
+                
+                <button type="submit" id="auth-submit-btn" class="btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Войти
+                </button>
+            </form>
             
-            <div class="auth-switch" onclick="toggleAuthMode()">
+            <div class="auth-toggle-link" onclick="AuthManager.toggleMode()">
                 Нет аккаунта? <span id="auth-switch-text">Зарегистрироваться</span>
             </div>
         </div>
-    </div>
+    </main>
 
-    <!-- =======================================================================
-         ОСНОВНОЕ ПРИЛОЖЕНИЕ
-         ======================================================================= -->
-    <div id="app-screen">
-        <div class="app-container">
+    <!-- МОДАЛЬНОЕ ОКНО: НАСТРОЙКИ ПРОФИЛЯ -->
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-content-box">
+            <button class="modal-close-btn" onclick="UIManager.toggleSettings()" aria-label="Закрыть">
+                <i class="fas fa-times"></i>
+            </button>
             
-            <!-- ЛЕВАЯ ПАНЕЛЬ: СПИСОК ЧАТОВ -->
-            <div class="sidebar">
-                <div class="sidebar-header">
-                    <div class="my-profile">
-                        <div class="avatar" id="my-avatar" style="width: 36px; height: 36px; font-size: 16px;">U</div>
-                        <span id="my-username-display">Мой профиль</span>
-                    </div>
-                    <button class="logout-btn" onclick="logout()" title="Выйти"><i class="fas fa-sign-out-alt"></i></button>
+            <h2 class="modal-title">Настройки профиля</h2>
+            <p class="modal-subtitle">Аватарка сохраняется локально в браузере</p>
+            
+            <label class="avatar-upload-wrapper" title="Изменить фото">
+                <div class="avatar-base avatar-upload-preview" id="settings-avatar-preview">U</div>
+                <div class="avatar-upload-overlay">
+                    <i class="fas fa-camera"></i>
                 </div>
-                
-                <div class="search-bar">
-                    <input type="text" placeholder="Поиск контактов...">
-                </div>
+                <!-- Скрытый инпут для файлов -->
+                <input type="file" id="hidden-file-input" accept="image/png, image/jpeg, image/webp" onchange="SettingsManager.handleAvatarSelect(event)">
+            </label>
 
-                <div class="chat-list" id="chat-list">
-                    <!-- Общий чат параллели генерируется всегда -->
-                    <div class="chat-item active" onclick="selectChat(null, 'Общий чат параллели')">
-                        <div class="avatar avatar-global"><i class="fas fa-users"></i></div>
-                        <div class="chat-info">
-                            <div class="chat-name">Общий чат параллели</div>
-                            <div class="chat-status">Все ученики</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Контакты (генерируются через JS) -->
-                    <div id="users-container"></div>
-                </div>
+            <div class="input-wrapper">
+                <i class="fas fa-pen input-icon"></i>
+                <input type="text" id="settings-username-input" class="input-control" placeholder="Ваш новый никнейм" maxlength="30">
             </div>
-
-            <!-- ПРАВАЯ ПАНЕЛЬ: ОКНО СООБЩЕНИЙ -->
-            <div class="chat-area">
-                
-                <!-- Заголовок чата -->
-                <div class="chat-header" id="current-chat-header" style="display: none;">
-                    <div class="avatar" id="current-chat-avatar" style="width: 40px; height: 40px; margin-right: 15px; font-size: 16px;">Г</div>
-                    <div class="chat-info">
-                        <div class="chat-name" id="current-chat-name">Общий чат параллели</div>
-                        <div class="chat-status">онлайн</div>
-                    </div>
-                </div>
-
-                <!-- Область с бабблами -->
-                <div class="messages-container" id="messages-container">
-                    <div class="empty-chat">Выберите чат, чтобы начать общение</div>
-                </div>
-
-                <!-- Поле ввода -->
-                <div class="input-area" id="input-area" style="display: none;">
-                    <i class="fas fa-paperclip" style="color: var(--text-muted); font-size: 20px; cursor: pointer;"></i>
-                    <div class="message-input-wrapper">
-                        <input type="text" id="message-input" placeholder="Написать сообщение..." onkeypress="handleKeyPress(event)">
-                        <i class="far fa-smile" style="color: var(--text-muted); font-size: 20px; cursor: pointer;"></i>
-                    </div>
-                    <button class="send-btn" onclick="sendMessage()">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-                </div>
-
-            </div>
+            
+            <button class="btn-primary" onclick="SettingsManager.saveChanges()">
+                <i class="fas fa-save"></i> Сохранить изменения
+            </button>
         </div>
     </div>
 
-    <!-- =======================================================================
-         JAVASCRIPT ЛОГИКА
-         ======================================================================= -->
+    <!-- ЭКРАН 2: ОСНОВНОЕ ПРИЛОЖЕНИЕ (МЕССЕНДЖЕР) -->
+    <main id="app-screen" class="app-screen-layout">
+        <!-- Обертка для мобильной анимации (выезд чата) -->
+        <div class="app-container" id="app-wrapper">
+            
+            <!-- ЛЕВАЯ ПАНЕЛЬ: МЕНЮ И СПИСОК ЧАТОВ -->
+            <aside class="sidebar-panel">
+                <!-- Шапка боковой панели -->
+                <header class="sidebar-header">
+                    <div class="user-profile-summary" onclick="UIManager.toggleSettings()" title="Открыть настройки">
+                        <div class="avatar-base avatar-sm" id="my-profile-avatar">U</div>
+                        <span id="my-profile-name">Загрузка...</span>
+                    </div>
+                    
+                    <div class="sidebar-actions">
+                        <button class="icon-btn" onclick="UIManager.toggleSettings()" title="Настройки" aria-label="Настройки">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                        <button class="icon-btn" onclick="AuthManager.logout()" title="Выйти из аккаунта" aria-label="Выйти">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+                </header>
+                
+                <!-- Поиск контактов -->
+                <div class="search-container">
+                    <input type="text" id="contact-search" class="search-input" placeholder="Поиск контактов..." onkeyup="ChatManager.filterContacts(this.value)">
+                </div>
+
+                <!-- Динамический список контактов/чатов -->
+                <div class="chat-list-container" id="chat-list-container">
+                    <!-- Общий чат (Статичный элемент) -->
+                    <div class="chat-list-item is-active" id="chat-item-global" onclick="ChatManager.selectChat(null, 'Общий чат параллели')">
+                        <div class="avatar-base avatar-md gradient-global">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="chat-list-info">
+                            <div class="chat-list-name">Общий чат параллели</div>
+                            <div class="chat-list-status">Все ученики школы</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Разделитель -->
+                    <div style="height: 1px; background: var(--color-border-subtle); margin: 5px 15px;"></div>
+                    
+                    <!-- Контейнер для загруженных контактов -->
+                    <div id="dynamic-users-container">
+                        <!-- Скелетоны будут рендериться здесь до загрузки данных -->
+                    </div>
+                </div>
+            </aside>
+
+            <!-- ПРАВАЯ ПАНЕЛЬ: ОКНО ПЕРЕПИСКИ -->
+            <section class="chat-area-panel">
+                
+                <!-- Шапка открытого чата -->
+                <header class="chat-header" id="active-chat-header" style="display: none;">
+                    <button class="mobile-back-button" onclick="UIManager.closeMobileChat()" aria-label="Назад к списку чатов">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    
+                    <div class="avatar-base avatar-sm" id="active-chat-avatar" style="margin-right: 15px;">Г</div>
+                    
+                    <div class="chat-header-info">
+                        <h2 class="chat-header-title" id="active-chat-name">Общий чат</h2>
+                        <span class="chat-header-subtitle" id="active-chat-status">онлайн</span>
+                    </div>
+                </header>
+
+                <!-- Контейнер с бабблами сообщений -->
+                <div class="messages-scroll-area" id="messages-render-area">
+                    <!-- Дефолтное состояние до выбора чата -->
+                    <div class="empty-state-container">
+                        <div class="empty-state-icon">
+                            <i class="far fa-comments"></i>
+                        </div>
+                        <h3>School Messenger</h3>
+                        <p>Выберите чат в левом меню, чтобы начать общение</p>
+                    </div>
+                </div>
+
+                <!-- Зона ввода текста -->
+                <footer class="input-footer" id="chat-input-area" style="display: none;">
+                    <button class="attachment-btn" title="Прикрепить файл (В разработке)">
+                        <i class="fas fa-paperclip"></i>
+                    </button>
+                    
+                    <div class="compose-wrapper">
+                        <!-- Используем textarea для многострочного ввода, как в реальных мессенджерах -->
+                        <textarea 
+                            id="message-compose-input" 
+                            class="compose-input" 
+                            placeholder="Написать сообщение..." 
+                            rows="1"
+                            onkeydown="ChatManager.handleKeyPress(event)"
+                            oninput="UIManager.autoResizeInput(this)"
+                        ></textarea>
+                        
+                        <button class="emoji-btn" title="Смайлики (В разработке)">
+                            <i class="far fa-smile"></i>
+                        </button>
+                    </div>
+                    
+                    <button class="send-message-btn" id="send-msg-btn" onclick="ChatManager.sendMessage()" title="Отправить сообщение">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </footer>
+                
+            </section>
+        </div>
+    </main>
+
+    <!-- 
+      ==========================================================================
+                                HTML ШАБЛОНЫ (TEMPLATES)
+      ========================================================================== 
+      Шаблоны не отображаются на странице, они клонируются через JavaScript.
+      Это самый правильный и чистый способ создавать DOM-элементы.
+    -->
+
+    <!-- Шаблон: Пользователь в списке контактов -->
+    <template id="tpl-contact-item">
+        <div class="chat-list-item contact-item-row">
+            <div class="avatar-base avatar-md tpl-avatar"></div>
+            <div class="chat-list-info">
+                <div class="chat-list-name tpl-name"></div>
+                <div class="chat-list-status tpl-status">ученик</div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Шаблон: Скелетон загрузки контакта -->
+    <template id="tpl-skeleton-contact">
+        <div class="chat-list-item" style="pointer-events: none;">
+            <div class="skeleton skeleton-avatar"></div>
+            <div class="chat-list-info">
+                <div class="skeleton skeleton-text-line"></div>
+                <div class="skeleton skeleton-text-line skeleton-text-short"></div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Шаблон: Входящее/Исходящее сообщение -->
+    <template id="tpl-message-bubble">
+        <div class="message-row">
+            <div class="message-bubble">
+                <!-- Имя отправителя (только для групповых входящих) -->
+                <div class="message-sender-name tpl-msg-sender" style="display: none;"></div>
+                
+                <!-- Текст сообщения -->
+                <div class="message-content tpl-msg-text"></div>
+                
+                <!-- Метадата (Время и галочки) -->
+                <div class="message-meta">
+                    <span class="message-time tpl-msg-time"></span>
+                    <!-- Галочки (Показываем только для исходящих) -->
+                    <i class="fas fa-check-double message-status-tick tpl-msg-tick" style="display: none;"></i>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Шаблон: Разделитель даты -->
+    <template id="tpl-date-divider">
+        <div class="date-divider">
+            <span class="date-divider-text tpl-date-text"></span>
+        </div>
+    </template>
+
+
+    <!-- 
+      ==========================================================================
+                                JAVASCRIPT ЛОГИКА (APP CORE)
+      ========================================================================== 
+    -->
     <script>
         /**
-         * ГЛОБАЛЬНЫЕ НАСТРОЙКИ
-         * Подключение к бэкенду на PythonAnywhere
+         * @constant {string} API_BASE 
+         * Базовый URL бэкенда на PythonAnywhere.
          */
         const API_BASE = 'https://maonteel.pythonanywhere.com/api';
-        
-        // Глобальные состояния
-        let isLoginMode = true;
-        let currentUser = null;         // Объект: {id, username}
-        let currentChatId = null;       // null = общий чат, число = ID пользователя (ЛС)
-        let pollingInterval = null;     // Интервал обновления (Polling)
-        let lastMessageCount = 0;       // Для предотвращения лишних скроллов
 
         /**
-         * ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ
+         * @object AppState
+         * Глобальный объект для хранения состояния приложения (Redux-подобный паттерн).
          */
-        window.onload = () => {
-            const savedUser = localStorage.getItem('messenger_user');
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                showAppScreen();
-            }
+        const AppState = {
+            currentUser: null,       // { id: number, username: string }
+            currentChatId: null,     // null = Общий чат, number = Личные сообщения (ID юзера)
+            usersList: [],           // Кэш списка пользователей
+            lastMessageCount: 0,     // Для проверки появления новых сообщений
+            pollingIntervalId: null, // Идентификатор таймера поллинга
+            isLoginMode: true        // Режим формы: true = Вход, false = Регистрация
         };
 
-        /**
-         * УТИЛИТЫ: Генерация градиента для аватарок на основе имени
-         */
-        function getGradientForName(name) {
-            const colors = [
-                ['#ff512f', '#dd2476'], ['#1A2980', '#26D0CE'], 
-                ['#b20a2c', '#fffbd5'], ['#1D976C', '#93F9B9'],
-                ['#000046', '#1CB5E0'], ['#e52d27', '#b31217'],
-                ['#f2709c', '#ff9472'], ['#4facfe', '#00f2fe']
-            ];
-            let hash = 0;
-            for (let i = 0; i < name.length; i++) {
-                hash = name.charCodeAt(i) + ((hash << 5) - hash);
-            }
-            const index = Math.abs(hash) % colors.length;
-            return `linear-gradient(135deg, ${colors[index][0]}, ${colors[index][1]})`;
-        }
-
-        /**
-         * АВТОРИЗАЦИЯ И РЕГИСТРАЦИЯ
-         */
-        function toggleAuthMode() {
-            isLoginMode = !isLoginMode;
-            document.getElementById('auth-title').innerText = isLoginMode ? 'Вход в School Chat' : 'Регистрация';
-            document.getElementById('auth-submit-btn').innerText = isLoginMode ? 'Войти' : 'Создать аккаунт';
-            document.getElementById('auth-switch-text').innerText = isLoginMode ? 'Зарегистрироваться' : 'Войти в аккаунт';
-            document.getElementById('auth-error').style.display = 'none';
-        }
-
-        function showError(msg) {
-            const errEl = document.getElementById('auth-error');
-            errEl.innerText = msg;
-            errEl.style.display = 'block';
-        }
-
-        async function handleAuth() {
-            const usernameInput = document.getElementById('username').value.trim();
-            const passwordInput = document.getElementById('password').value;
-
-            if (!usernameInput || !passwordInput) {
-                showError("Заполните все поля");
-                return;
-            }
-
-            const endpoint = isLoginMode ? '/login' : '/register';
-            const payload = { username: usernameInput, password: passwordInput };
-
-            try {
-                // Использование fetch с mode: 'cors'
-                const response = await fetch(API_BASE + endpoint, {
-                    method: 'POST',
-                    mode: 'cors',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    showError(data.error || 'Произошла ошибка сети');
-                    return;
-                }
-
-                // Успешный вход или регистрация
-                currentUser = { 
-                    id: data.user_id, 
-                    username: usernameInput 
-                };
-                localStorage.setItem('messenger_user', JSON.stringify(currentUser));
-                showAppScreen();
-
-            } catch (error) {
-                console.error("Auth error:", error);
-                showError("Ошибка подключения к серверу");
-            }
-        }
-
-        function logout() {
-            localStorage.removeItem('messenger_user');
-            currentUser = null;
-            stopPolling();
-            document.getElementById('app-screen').style.display = 'none';
-            document.getElementById('auth-screen').style.display = 'flex';
-            document.getElementById('auth-screen').style.opacity = '1';
-            
-            // Сброс полей
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-            document.getElementById('auth-error').style.display = 'none';
-        }
-
-        /**
-         * ОСНОВНОЙ ЭКРАН ПРИЛОЖЕНИЯ
-         */
-        function showAppScreen() {
-            document.getElementById('auth-screen').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('auth-screen').style.display = 'none';
-                document.getElementById('app-screen').style.display = 'block';
+        /* --------------------------------------------------------------------------
+           КЛАСС 1: ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ (UTILS)
+           -------------------------------------------------------------------------- */
+        class Utils {
+            /**
+             * Генерирует уникальный градиент на основе строки (имени).
+             * @param {string} name - Имя пользователя
+             * @returns {string} CSS background-image свойство
+             */
+            static getGradientForName(name) {
+                if (!name) return 'linear-gradient(135deg, #7f91a4, #5288c1)';
                 
-                // Настройка профиля в сайдбаре
-                document.getElementById('my-username-display').innerText = currentUser.username;
-                const myAvatar = document.getElementById('my-avatar');
-                myAvatar.innerText = currentUser.username.charAt(0).toUpperCase();
-                myAvatar.style.background = getGradientForName(currentUser.username);
-
-                // Загрузка данных
-                fetchUsers();
-                // По умолчанию открываем общий чат (null)
-                selectChat(null, 'Общий чат параллели');
+                const colorPairs = [
+                    ['#ff512f', '#dd2476'], ['#1A2980', '#26D0CE'], 
+                    ['#b20a2c', '#fffbd5'], ['#1D976C', '#93F9B9'],
+                    ['#000046', '#1CB5E0'], ['#e52d27', '#b31217'],
+                    ['#f2709c', '#ff9472'], ['#4facfe', '#00f2fe'],
+                    ['#834d9b', '#d04ed6'], ['#11998e', '#38ef7d']
+                ];
                 
-            }, 500); // Ожидание окончания CSS-анимации
-        }
-
-        /**
-         * ПОЛУЧЕНИЕ ПОЛЬЗОВАТЕЛЕЙ (КОНТАКТОВ)
-         */
-        async function fetchUsers() {
-            try {
-                const response = await fetch(API_BASE + '/users', { mode: 'cors' });
-                if (!response.ok) return;
+                // Простейший алгоритм хэширования строки
+                let hash = 0;
+                for (let i = 0; i < name.length; i++) {
+                    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+                }
                 
-                const users = await response.json();
-                const container = document.getElementById('users-container');
-                container.innerHTML = ''; // Очистка
-
-                users.forEach(user => {
-                    // Не показываем самого себя в списке контактов
-                    if (user.id === currentUser.id) return;
-
-                    const div = document.createElement('div');
-                    div.className = 'chat-item';
-                    div.id = `chat-user-${user.id}`;
-                    div.onclick = () => selectChat(user.id, user.username);
-                    
-                    const avatarLetter = user.username.charAt(0).toUpperCase();
-                    const avatarBg = getGradientForName(user.username);
-
-                    div.innerHTML = `
-                        <div class="avatar" style="background: ${avatarBg}">${avatarLetter}</div>
-                        <div class="chat-info">
-                            <div class="chat-name">${user.username}</div>
-                            <div class="chat-status">ученик</div>
-                        </div>
-                    `;
-                    container.appendChild(div);
-                });
-
-            } catch (error) {
-                console.error("Ошибка загрузки пользователей:", error);
-            }
-        }
-
-        /**
-         * ЛОГИКА ВЫБОРА ЧАТА
-         */
-        function selectChat(userId, chatName) {
-            currentChatId = userId;
-            lastMessageCount = 0; // Сброс счетчика для автоскролла
-
-            // Обновление UI выделения в сайдбаре
-            document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
-            if (userId === null) {
-                document.querySelector('.chat-item').classList.add('active'); // Первый элемент - общий
-            } else {
-                const userNode = document.getElementById(`chat-user-${userId}`);
-                if (userNode) userNode.classList.add('active');
+                const index = Math.abs(hash) % colorPairs.length;
+                return `linear-gradient(135deg, ${colorPairs[index][0]}, ${colorPairs[index][1]})`;
             }
 
-            // Обновление заголовка чата
-            document.getElementById('current-chat-header').style.display = 'flex';
-            document.getElementById('input-area').style.display = 'flex';
-            document.getElementById('current-chat-name').innerText = chatName;
-            
-            const avatarEl = document.getElementById('current-chat-avatar');
-            if (userId === null) {
-                avatarEl.innerHTML = '<i class="fas fa-users"></i>';
-                avatarEl.style.background = 'linear-gradient(135deg, #3498db, #2980b9)';
-            } else {
-                avatarEl.innerText = chatName.charAt(0).toUpperCase();
-                avatarEl.style.background = getGradientForName(chatName);
-            }
-
-            // Очистка сообщений перед загрузкой новых
-            document.getElementById('messages-container').innerHTML = '';
-
-            // Запуск поллинга для нового чата
-            startPolling();
-        }
-
-        /**
-         * ЗАГРУЗКА И ОТОБРАЖЕНИЕ СООБЩЕНИЙ
-         */
-        async function fetchMessages() {
-            if (!currentUser) return;
-
-            try {
-                // Формируем URL. Если currentChatId === null, запрашиваем общий чат.
-                let url = `${API_BASE}/messages?user_id=${currentUser.id}`;
-                if (currentChatId !== null) {
-                    url += `&receiver_id=${currentChatId}`;
+            /**
+             * Применяет аватарку к DOM элементу (Градиент или загруженная картинка из LocalStorage)
+             * @param {HTMLElement} element - Элемент аватарки
+             * @param {string} username - Имя пользователя
+             * @param {number} userId - ID пользователя
+             */
+            static applyAvatar(element, username, userId) {
+                if (!element || !username) return;
+                
+                // Ищем кастомную аватарку в памяти браузера
+                const customImgBase64 = localStorage.getItem(`avatar_${userId}`);
+                
+                if (customImgBase64) {
+                    element.style.backgroundImage = `url(${customImgBase64})`;
+                    element.innerText = ''; // Убираем букву
+                } else {
+                    element.style.backgroundImage = this.getGradientForName(username);
+                    element.innerText = username.charAt(0).toUpperCase();
                 }
-
-                const response = await fetch(url, { mode: 'cors' });
-                if (!response.ok) return;
-
-                const messages = await response.json();
-                renderMessages(messages);
-
-            } catch (error) {
-                console.error("Ошибка загрузки сообщений:", error);
-            }
-        }
-
-        function renderMessages(messages) {
-            const container = document.getElementById('messages-container');
-            
-            // Если новых сообщений нет, ничего не делаем
-            if (messages.length === lastMessageCount) return;
-
-            container.innerHTML = ''; // Для простоты перерисовываем все. В реальных production-приложениях добавляют только новые.
-            
-            if (messages.length === 0) {
-                container.innerHTML = '<div class="empty-chat">Здесь пока нет сообщений. Напишите первым!</div>';
-                lastMessageCount = 0;
-                return;
             }
 
-            messages.forEach(msg => {
-                const isMine = msg.sender_id === currentUser.id;
-                const wrapper = document.createElement('div');
-                wrapper.className = `message-wrapper ${isMine ? 'out' : 'in'}`;
-
-                // Форматирование времени (из UTC БД в локальное время браузера)
-                const dateObj = new Date(msg.timestamp + 'Z'); 
-                const timeStr = isNaN(dateObj) ? '' : dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-                wrapper.innerHTML = `
-                    <div class="message">
-                        ${!isMine && currentChatId === null ? `<div class="msg-sender">${msg.sender_name}</div>` : ''}
-                        <div class="msg-text">${escapeHTML(msg.text)}</div>
-                        <div class="msg-time">${timeStr}</div>
-                    </div>
-                `;
-                container.appendChild(wrapper);
-            });
-
-            // Автоматический скролл вниз
-            container.scrollTop = container.scrollHeight;
-            lastMessageCount = messages.length;
-        }
-
-        /**
-         * ОТПРАВКА СООБЩЕНИЙ
-         */
-        async function sendMessage() {
-            const inputEl = document.getElementById('message-input');
-            const text = inputEl.value.trim();
-
-            if (!text || !currentUser) return;
-
-            // Блокируем инпут на время отправки
-            inputEl.disabled = true;
-
-            const payload = {
-                sender_id: currentUser.id,
-                receiver_id: currentChatId, // null для общего чата
-                text: text
-            };
-
-            try {
-                const response = await fetch(API_BASE + '/messages', {
-                    method: 'POST',
-                    mode: 'cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (response.ok) {
-                    inputEl.value = '';
-                    // Сразу запрашиваем сообщения для плавного обновления
-                    fetchMessages();
-                }
-            } catch (error) {
-                console.error("Ошибка при отправке:", error);
-            } finally {
-                inputEl.disabled = false;
-                inputEl.focus();
-            }
-        }
-
-        // Обработка нажатия Enter
-        function handleKeyPress(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        }
-
-        /**
-         * СИСТЕМА POLLING (Автоматическое обновление)
-         */
-        function startPolling() {
-            stopPolling();
-            fetchMessages(); // Немедленный первый запрос
-            // Поллинг каждые 2 секунды, как указано в ТЗ
-            pollingInterval = setInterval(fetchMessages, 2000);
-            
-            // Также периодически обновляем список пользователей
-            setInterval(fetchUsers, 10000); 
-        }
-
-        function stopPolling() {
-            if (pollingInterval) {
-                clearInterval(pollingInterval);
-                pollingInterval = null;
-            }
-        }
-
-        /**
-         * ЗАЩИТА ОТ XSS (Очистка ввода для безопасности)
-         */
-        function escapeHTML(str) {
-            return str.replace(/[&<>'"]/g, 
-                tag => ({
+            /**
+             * Защита от XSS-атак при рендере пользовательского текста.
+             * @param {string} str - Небезопасная строка
+             * @returns {string} Безопасная строка
+             */
+            static escapeHTML(str) {
+                if (!str) return '';
+                return str.replace(/[&<>'"]/g, tag => ({
                     '&': '&amp;',
                     '<': '&lt;',
                     '>': '&gt;',
                     "'": '&#39;',
                     '"': '&quot;'
-                }[tag] || tag)
-            );
+                }[tag] || tag));
+            }
+
+            /**
+             * Форматирует Timestamp в читаемое время (HH:MM).
+             * @param {string} utcString - Строка даты из БД (UTC)
+             * @returns {string} Локальное время
+             */
+            static formatTime(utcString) {
+                const date = new Date(utcString + 'Z'); // Добавляем 'Z', чтобы парсер понимал, что это UTC
+                if (isNaN(date)) return '';
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
         }
+
+        /* --------------------------------------------------------------------------
+           КЛАСС 2: СИСТЕМА УВЕДОМЛЕНИЙ (TOAST MANAGER)
+           -------------------------------------------------------------------------- */
+        class ToastManager {
+            /**
+             * Показывает всплывающее уведомление.
+             * @param {string} message - Текст сообщения
+             * @param {string} type - Тип ('success', 'error', 'warning')
+             */
+            static show(message, type = 'success') {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = `toast-message ${type}`;
+                
+                // Выбор иконки
+                let iconClass = 'fas fa-info-circle';
+                if (type === 'success') iconClass = 'fas fa-check-circle';
+                if (type === 'error') iconClass = 'fas fa-exclamation-circle';
+                if (type === 'warning') iconClass = 'fas fa-exclamation-triangle';
+
+                toast.innerHTML = `<i class="${iconClass}"></i> <span>${Utils.escapeHTML(message)}</span>`;
+                
+                container.appendChild(toast);
+
+                // Удаление через 3 секунды с анимацией
+                setTimeout(() => {
+                    toast.style.animation = 'toastOut 0.3s forwards';
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+        }
+
+        /* --------------------------------------------------------------------------
+           КЛАСС 3: РАБОТА С СЕТЬЮ (API CLIENT)
+           -------------------------------------------------------------------------- */
+        class APIClient {
+            /**
+             * Базовый метод для выполнения запросов с обработкой ошибок.
+             */
+            static async request(endpoint, method = 'GET', body = null) {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                };
+                
+                if (body) {
+                    options.body = JSON.stringify(body);
+                }
+
+                try {
+                    const response = await fetch(`${API_BASE}${endpoint}`, options);
+                    const data = await response.json().catch(() => ({})); // Безопасный парсинг
+                    
+                    if (!response.ok) {
+                        throw new Error(data.error || `Ошибка сервера: ${response.status}`);
+                    }
+                    
+                    return data;
+                } catch (error) {
+                    console.error(`API Error [${method} ${endpoint}]:`, error);
+                    throw error;
+                }
+            }
+        }
+
+        /* --------------------------------------------------------------------------
+           КЛАСС 4: АВТОРИЗАЦИЯ (AUTH MANAGER)
+           -------------------------------------------------------------------------- */
+        class AuthManager {
+            /**
+             * Проверка сессии при загрузке страницы.
+             */
+            static init() {
+                const savedData = localStorage.getItem('messenger_user');
+                if (savedData) {
+                    try {
+                        AppState.currentUser = JSON.parse(savedData);
+                        UIManager.switchToApp();
+                    } catch (e) {
+                        this.logout();
+                    }
+                } else {
+                    UIManager.showAuth();
+                }
+            }
+
+            /**
+             * Переключение между Входом и Регистрацией.
+             */
+            static toggleMode() {
+                AppState.isLoginMode = !AppState.isLoginMode;
+                const title = document.getElementById('auth-title');
+                const btn = document.getElementById('auth-submit-btn');
+                const switchText = document.getElementById('auth-switch-text');
+                
+                if (AppState.isLoginMode) {
+                    title.innerText = 'Вход в School Chat';
+                    btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Войти';
+                    switchText.innerText = 'Зарегистрироваться';
+                } else {
+                    title.innerText = 'Регистрация';
+                    btn.innerHTML = '<i class="fas fa-user-plus"></i> Создать аккаунт';
+                    switchText.innerText = 'Войти в аккаунт';
+                }
+            }
+
+            /**
+             * Обработка отправки формы входа/регистрации.
+             */
+            static async submit() {
+                const userInp = document.getElementById('auth-username');
+                const passInp = document.getElementById('auth-password');
+                const btn = document.getElementById('auth-submit-btn');
+                
+                const username = userInp.value.trim();
+                const password = passInp.value;
+
+                if (!username || !password) {
+                    ToastManager.show('Заполните все поля', 'error');
+                    return;
+                }
+
+                // Блокируем кнопку на время запроса
+                const originalBtnHtml = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Загрузка...';
+
+                const endpoint = AppState.isLoginMode ? '/login' : '/register';
+                
+                try {
+                    const data = await APIClient.request(endpoint, 'POST', { username, password });
+                    
+                    // Успешная авторизация
+                    AppState.currentUser = {
+                        id: data.user_id,
+                        username: data.username || username // При регистрации бэкенд может не вернуть username, берем из инпута
+                    };
+                    
+                    localStorage.setItem('messenger_user', JSON.stringify(AppState.currentUser));
+                    
+                    ToastManager.show(AppState.isLoginMode ? 'Успешный вход' : 'Аккаунт создан', 'success');
+                    
+                    // Очистка полей
+                    userInp.value = '';
+                    passInp.value = '';
+                    
+                    UIManager.switchToApp();
+                    
+                } catch (error) {
+                    ToastManager.show(error.message, 'error');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalBtnHtml;
+                }
+            }
+
+            /**
+             * Выход из аккаунта.
+             */
+            static logout() {
+                localStorage.removeItem('messenger_user');
+                AppState.currentUser = null;
+                ChatManager.stopPolling();
+                UIManager.showAuth();
+                UIManager.closeMobileChat();
+            }
+        }
+
+        /* --------------------------------------------------------------------------
+           КЛАСС 5: НАСТРОЙКИ ПОЛЬЗОВАТЕЛЯ (SETTINGS MANAGER)
+           -------------------------------------------------------------------------- */
+        class SettingsManager {
+            /**
+             * Обработка выбора файла (аватарки) с компьютера/телефона.
+             */
+            static handleAvatarSelect(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                // Проверка размера (макс 2MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    ToastManager.show('Файл слишком большой (Макс 2MB)', 'error');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const base64String = e.target.result;
+                    // Сохраняем в LocalStorage
+                    localStorage.setItem(`avatar_${AppState.currentUser.id}`, base64String);
+                    
+                    // Обновляем превью в модалке
+                    const preview = document.getElementById('settings-avatar-preview');
+                    Utils.applyAvatar(preview, AppState.currentUser.username, AppState.currentUser.id);
+                    
+                    // Обновляем в боковой панели
+                    UIManager.updateProfileSidebar();
+                    ToastManager.show('Фотография сохранена', 'success');
+                };
+                reader.readAsDataURL(file); // Конвертируем в Data URL (Base64)
+            }
+
+            /**
+             * Сохранение изменений профиля (Никнейм).
+             */
+            static async saveChanges() {
+                const input = document.getElementById('settings-username-input');
+                const newName = input.value.trim();
+                
+                if (!newName) {
+                    ToastManager.show('Имя не может быть пустым', 'error');
+                    return;
+                }
+
+                if (newName === AppState.currentUser.username) {
+                    UIManager.toggleSettings();
+                    return; // Нет изменений
+                }
+
+                try {
+                    await APIClient.request('/update_user', 'POST', {
+                        user_id: AppState.currentUser.id,
+                        new_username: newName
+                    });
+                    
+                    // Обновляем локальный стейт
+                    AppState.currentUser.username = newName;
+                    localStorage.setItem('messenger_user', JSON.stringify(AppState.currentUser));
+                    
+                    UIManager.updateProfileSidebar();
+                    ToastManager.show('Профиль успешно обновлен', 'success');
+                    UIManager.toggleSettings();
+                    
+                } catch (error) {
+                    ToastManager.show(error.message, 'error');
+                }
+            }
+        }
+
+        /* --------------------------------------------------------------------------
+           КЛАСС 6: ЛОГИКА ЧАТОВ И ПОЛЛИНГ (CHAT MANAGER)
+           -------------------------------------------------------------------------- */
+        class ChatManager {
+            /**
+             * Загрузка списка пользователей (контактов).
+             */
+            static async loadContacts() {
+                const container = document.getElementById('dynamic-users-container');
+                const tplContact = document.getElementById('tpl-contact-item');
+                const tplSkeleton = document.getElementById('tpl-skeleton-contact');
+                
+                // Показываем скелетоны загрузки, если список пуст
+                if (AppState.usersList.length === 0) {
+                    container.innerHTML = '';
+                    for (let i = 0; i < 5; i++) {
+                        container.appendChild(tplSkeleton.content.cloneNode(true));
+                    }
+                }
+
+                try {
+                    const users = await APIClient.request('/users');
+                    AppState.usersList = users; // Кэшируем
+                    this.renderContactsList(users);
+                } catch (error) {
+                    console.error("Не удалось загрузить контакты", error);
+                }
+            }
+
+            /**
+             * Рендер списка контактов.
+             * @param {Array} users 
+             */
+            static renderContactsList(users) {
+                const container = document.getElementById('dynamic-users-container');
+                const tplContact = document.getElementById('tpl-contact-item');
+                container.innerHTML = ''; // Очистка скелетонов
+
+                users.forEach(user => {
+                    // Не рендерим самого себя
+                    if (user.id === AppState.currentUser.id) return;
+
+                    const clone = tplContact.content.cloneNode(true);
+                    const itemRow = clone.querySelector('.contact-item-row');
+                    const avatarNode = clone.querySelector('.tpl-avatar');
+                    const nameNode = clone.querySelector('.tpl-name');
+                    
+                    itemRow.id = `contact-user-${user.id}`;
+                    itemRow.onclick = () => this.selectChat(user.id, user.username);
+                    
+                    nameNode.textContent = user.username;
+                    Utils.applyAvatar(avatarNode, user.username, user.id);
+                    
+                    // Восстановление активного состояния, если этот чат открыт
+                    if (AppState.currentChatId === user.id) {
+                        itemRow.classList.add('is-active');
+                    }
+
+                    container.appendChild(clone);
+                });
+            }
+
+            /**
+             * Локальный поиск по загруженным контактам.
+             */
+            static filterContacts(query) {
+                const lowerQuery = query.toLowerCase();
+                const filtered = AppState.usersList.filter(u => 
+                    u.username.toLowerCase().includes(lowerQuery)
+                );
+                this.renderContactsList(filtered);
+            }
+
+            /**
+             * Обработка клика по чату (Переход в чат).
+             * @param {number|null} targetId - ID пользователя или null для общего чата
+             * @param {string} chatName - Имя для отображения в шапке
+             */
+            static selectChat(targetId, chatName) {
+                AppState.currentChatId = targetId;
+                AppState.lastMessageCount = 0; // Сброс счетчика
+                
+                // 1. Обновление UI списка (выделение активного)
+                document.querySelectorAll('.chat-list-item').forEach(el => el.classList.remove('is-active'));
+                if (targetId === null) {
+                    document.getElementById('chat-item-global').classList.add('is-active');
+                } else {
+                    const node = document.getElementById(`contact-user-${targetId}`);
+                    if (node) node.classList.add('is-active');
+                }
+
+                // 2. Обновление шапки чата
+                document.getElementById('active-chat-header').style.display = 'flex';
+                document.getElementById('chat-input-area').style.display = 'flex';
+                document.getElementById('active-chat-name').textContent = chatName;
+                
+                const avatarHeader = document.getElementById('active-chat-avatar');
+                if (targetId === null) {
+                    avatarHeader.className = 'avatar-base avatar-sm gradient-global';
+                    avatarHeader.innerHTML = '<i class="fas fa-users"></i>';
+                    avatarHeader.style.backgroundImage = '';
+                } else {
+                    avatarHeader.className = 'avatar-base avatar-sm';
+                    Utils.applyAvatar(avatarHeader, chatName, targetId);
+                }
+
+                // 3. Очистка зоны сообщений и показ лоадера
+                const msgArea = document.getElementById('messages-render-area');
+                msgArea.innerHTML = `
+                    <div style="display:flex; justify-content:center; align-items:center; height:100%; color:var(--color-text-muted);">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    </div>`;
+
+                // 4. Анимация для мобилок (Выезд чата на весь экран)
+                document.getElementById('app-wrapper').classList.add('is-chat-active');
+                
+                // 5. Запуск системы поллинга для нового чата
+                this.startPolling();
+            }
+
+            /**
+             * Загрузка истории сообщений текущего чата.
+             */
+            static async fetchMessages() {
+                if (!AppState.currentUser) return;
+                
+                let endpoint = `/messages?user_id=${AppState.currentUser.id}`;
+                if (AppState.currentChatId !== null) {
+                    endpoint += `&receiver_id=${AppState.currentChatId}`;
+                }
+
+                try {
+                    const messages = await APIClient.request(endpoint);
+                    this.renderMessages(messages);
+                } catch (error) {
+                    console.error("Ошибка синхронизации сообщений", error);
+                }
+            }
+
+            /**
+             * Отрисовка сообщений в DOM.
+             */
+            static renderMessages(messages) {
+                const container = document.getElementById('messages-render-area');
+                
+                // Оптимизация: Перерисовываем только если количество изменилось
+                // В идеальном приложении нужно находить дельту (новые сообщения) и делать appendChild.
+                if (messages.length === AppState.lastMessageCount) return;
+                
+                container.innerHTML = '';
+                
+                if (messages.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state-container">
+                            <div class="empty-state-icon"><i class="far fa-paper-plane"></i></div>
+                            <h3>Здесь пока пусто</h3>
+                            <p>Отправьте первое сообщение!</p>
+                        </div>`;
+                    AppState.lastMessageCount = 0;
+                    return;
+                }
+
+                const tplBubble = document.getElementById('tpl-message-bubble');
+                const tplDivider = document.getElementById('tpl-date-divider');
+                let currentDateLabel = null;
+
+                messages.forEach(msg => {
+                    const isMine = msg.sender_id === AppState.currentUser.id;
+                    const dateObj = new Date(msg.timestamp + 'Z');
+                    
+                    // --- Логика разделителя дат ---
+                    if (!isNaN(dateObj)) {
+                        const msgDate = dateObj.toLocaleDateString();
+                        if (msgDate !== currentDateLabel) {
+                            currentDateLabel = msgDate;
+                            
+                            // Форматируем красиво (Сегодня, Вчера или Дата)
+                            let labelText = msgDate;
+                            const today = new Date().toLocaleDateString();
+                            const yesterday = new Date(Date.now() - 86400000).toLocaleDateString();
+                            
+                            if (msgDate === today) labelText = "Сегодня";
+                            else if (msgDate === yesterday) labelText = "Вчера";
+
+                            const cloneDiv = tplDivider.content.cloneNode(true);
+                            cloneDiv.querySelector('.tpl-date-text').textContent = labelText;
+                            container.appendChild(cloneDiv);
+                        }
+                    }
+                    // --- Конец логики дат ---
+
+                    const clone = tplBubble.content.cloneNode(true);
+                    const rowNode = clone.querySelector('.message-row');
+                    const textNode = clone.querySelector('.tpl-msg-text');
+                    const timeNode = clone.querySelector('.tpl-msg-time');
+                    const senderNode = clone.querySelector('.tpl-msg-sender');
+                    const tickNode = clone.querySelector('.tpl-msg-tick');
+
+                    rowNode.classList.add(isMine ? 'is-out' : 'is-in');
+                    textNode.innerHTML = Utils.escapeHTML(msg.text); // XSS Protection
+                    timeNode.textContent = Utils.formatTime(msg.timestamp);
+
+                    // Если общий чат и чужое сообщение - показываем имя отправителя
+                    if (!isMine && AppState.currentChatId === null) {
+                        senderNode.style.display = 'block';
+                        senderNode.textContent = msg.sender_name;
+                    }
+
+                    // Если мое сообщение - показываем галочки (имитация прочтения)
+                    if (isMine) {
+                        tickNode.style.display = 'inline-block';
+                    }
+
+                    container.appendChild(clone);
+                });
+
+                // Автоскролл вниз при новых сообщениях
+                container.scrollTop = container.scrollHeight;
+                AppState.lastMessageCount = messages.length;
+            }
+
+            /**
+             * Отправка нового сообщения на сервер.
+             */
+            static async sendMessage() {
+                const inputArea = document.getElementById('message-compose-input');
+                const btn = document.getElementById('send-msg-btn');
+                const text = inputArea.value.trim();
+                
+                if (!text || !AppState.currentUser) return;
+
+                // UI блокировка защиты от двойного клика
+                inputArea.disabled = true;
+                btn.style.opacity = '0.5';
+
+                try {
+                    await APIClient.request('/messages', 'POST', {
+                        sender_id: AppState.currentUser.id,
+                        receiver_id: AppState.currentChatId, // null для общего
+                        text: text
+                    });
+                    
+                    inputArea.value = '';
+                    inputArea.style.height = 'auto'; // Сброс авто-высоты
+                    
+                    // Немедленный фетч для плавности
+                    await this.fetchMessages();
+                    
+                } catch (error) {
+                    ToastManager.show('Не удалось отправить сообщение', 'error');
+                } finally {
+                    inputArea.disabled = false;
+                    btn.style.opacity = '1';
+                    inputArea.focus();
+                }
+            }
+
+            /**
+             * Обработка Enter для отправки. Shift+Enter = перенос строки.
+             */
+            static handleKeyPress(event) {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault(); // Предотвращаем дефолтный перенос строки
+                    this.sendMessage();
+                }
+            }
+
+            /**
+             * Управление фоновыми обновлениями (Поллинг).
+             */
+            static startPolling() {
+                this.stopPolling();
+                this.fetchMessages(); // Первый запрос сразу
+                
+                // Каждые 2 секунды - новые сообщения (Как по ТЗ)
+                AppState.pollingIntervalId = setInterval(() => {
+                    this.fetchMessages();
+                }, 2000);
+                
+                // Фоновое обновление списка юзеров реже (раз в 15 сек)
+                setInterval(() => this.loadContacts(), 15000);
+            }
+
+            static stopPolling() {
+                if (AppState.pollingIntervalId) {
+                    clearInterval(AppState.pollingIntervalId);
+                    AppState.pollingIntervalId = null;
+                }
+            }
+        }
+
+        /* --------------------------------------------------------------------------
+           КЛАСС 7: УПРАВЛЕНИЕ ИНТЕРФЕЙСОМ (UI MANAGER)
+           -------------------------------------------------------------------------- */
+        class UIManager {
+            /**
+             * Переход на главный экран после входа.
+             */
+            static switchToApp() {
+                const authScreen = document.getElementById('auth-screen');
+                const appScreen = document.getElementById('app-screen');
+                
+                authScreen.style.opacity = '0';
+                
+                setTimeout(() => {
+                    authScreen.style.display = 'none';
+                    appScreen.style.display = 'block';
+                    
+                    this.updateProfileSidebar();
+                    ChatManager.loadContacts();
+                    
+                    // На Desktop экранах автоматически открываем общий чат
+                    if (window.innerWidth > 768) {
+                        ChatManager.selectChat(null, 'Общий чат параллели');
+                    }
+                }, 500); // Ожидание CSS transition
+            }
+
+            /**
+             * Переход на экран входа (Разлогин).
+             */
+            static showAuth() {
+                document.getElementById('app-screen').style.display = 'none';
+                const authScreen = document.getElementById('auth-screen');
+                authScreen.style.display = 'flex';
+                // Небольшая задержка для плавного fade-in
+                setTimeout(() => authScreen.style.opacity = '1', 50);
+            }
+
+            /**
+             * Обновление отображения текущего пользователя в левой панели.
+             */
+            static updateProfileSidebar() {
+                if (!AppState.currentUser) return;
+                
+                document.getElementById('my-profile-name').textContent = AppState.currentUser.username;
+                const avatarEl = document.getElementById('my-profile-avatar');
+                Utils.applyAvatar(avatarEl, AppState.currentUser.username, AppState.currentUser.id);
+            }
+
+            /**
+             * Открытие/Закрытие окна настроек профиля.
+             */
+            static toggleSettings() {
+                const modal = document.getElementById('settings-modal');
+                const isVisible = modal.classList.contains('is-visible');
+                
+                if (isVisible) {
+                    modal.classList.remove('is-visible');
+                    setTimeout(() => modal.style.display = 'none', 300); // Ждем конец анимации
+                } else {
+                    modal.style.display = 'flex';
+                    // Форсируем reflow для срабатывания CSS-перехода
+                    void modal.offsetWidth; 
+                    modal.classList.add('is-visible');
+                    
+                    // Предзаполнение данных
+                    document.getElementById('settings-username-input').value = AppState.currentUser.username;
+                    const preview = document.getElementById('settings-avatar-preview');
+                    Utils.applyAvatar(preview, AppState.currentUser.username, AppState.currentUser.id);
+                }
+            }
+
+            /**
+             * Автоматическое увеличение высоты textarea при вводе длинного текста.
+             */
+            static autoResizeInput(element) {
+                element.style.height = 'auto'; // Сброс высоты
+                // Устанавливаем высоту равную контенту (с ограничением max-height в CSS)
+                element.style.height = (element.scrollHeight) + 'px'; 
+            }
+
+            /**
+             * Возврат к списку чатов на смартфонах.
+             */
+            static closeMobileChat() {
+                document.getElementById('app-wrapper').classList.remove('is-chat-active');
+                ChatManager.stopPolling();
+                
+                // Снимаем выделение в списке
+                document.querySelectorAll('.chat-list-item').forEach(el => el.classList.remove('is-active'));
+                AppState.currentChatId = null;
+                
+                // Очищаем чат для красоты при следующем открытии
+                document.getElementById('active-chat-header').style.display = 'none';
+                document.getElementById('chat-input-area').style.display = 'none';
+                document.getElementById('messages-render-area').innerHTML = `
+                    <div class="empty-state-container">
+                        <div class="empty-state-icon"><i class="far fa-comments"></i></div>
+                        <h3>School Messenger</h3>
+                        <p>Выберите чат в меню</p>
+                    </div>`;
+            }
+        }
+
+        /* --------------------------------------------------------------------------
+           ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ
+           -------------------------------------------------------------------------- */
+        window.addEventListener('DOMContentLoaded', () => {
+            // Точка входа в приложение
+            AuthManager.init();
+            
+            // Закрытие модалок по клику на фон
+            document.getElementById('settings-modal').addEventListener('click', function(e) {
+                if (e.target === this) UIManager.toggleSettings();
+            });
+        });
+
     </script>
 </body>
 </html>
