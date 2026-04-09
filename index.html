@@ -1218,7 +1218,7 @@
     </div>
 
     <!-- ==========================================================================
-         РАЗДЕЛ 7: JAVASCRIPT ENTERPRISE LOGIC
+         РАЗДЕЛ 7: JAVASCRIPT ENTERPRISE LOGIC (ИСПРАВЛЕННАЯ ВЕРСИЯ)
          ========================================================================== -->
     <script>
         /** 
@@ -1229,9 +1229,10 @@
             API_URL: 'https://maonteel.pythonanywhere.com/api',
             POLL_MS: 2000,
             USERS_POLL_MS: 15000,
-            MAX_FILE_MB: 5,
+            MAX_FILE_MB: 16,
             KEY_USER: 'pro_messenger_user',
-            KEY_PINS: 'pro_messenger_pins'
+            KEY_PINS: 'pro_messenger_pins',
+            KEY_TOKEN: 'pro_messenger_token'   // ИЗМЕНЕНО: храним токен отдельно
         };
 
         /**
@@ -1240,6 +1241,7 @@
          */
         const Store = {
             me: null,               // {id, username, bio, avatar_data}
+            token: null,            // ИЗМЕНЕНО: токен
             users: [],              // Массив всех чатов
             pins: [],               // Массив ID запиненных чатов
             activeId: null,         // Текущий открытый чат
@@ -1247,8 +1249,7 @@
             lastMsgCount: 0,
             pollMsgTimer: null,
             pollUsersTimer: null,
-            media: { base64: null, type: null, name: '' },
-            viewProfileId: null,
+            media: { url: null, type: null, name: '' },  // ИЗМЕНЕНО: url вместо base64
             
             init: function() {
                 try {
@@ -1302,18 +1303,30 @@
         }
 
         /**
-         * API SERVICE
+         * API SERVICE (ИЗМЕНЕН)
          */
         class Api {
-            static async req(path, method='GET', body=null) {
-                const opt = { method, headers: {'Content-Type':'application/json'} };
-                if(body) opt.body = JSON.stringify(body);
-                try {
-                    const r = await fetch(CONFIG.API_URL + path, opt);
-                    const d = await r.json().catch(()=>({}));
-                    if(!r.ok) throw new Error(d.error || 'Server error');
-                    return d;
-                } catch(e) { throw e; }
+            static async req(path, method='GET', body=null, isJson=true) {
+                const headers = {};
+                if (Store.token) {
+                    headers['Authorization'] = `Bearer ${Store.token}`;
+                }
+                if (isJson) {
+                    headers['Content-Type'] = 'application/json';
+                }
+                const opt = { method, headers };
+                if (body) {
+                    opt.body = isJson ? JSON.stringify(body) : body;
+                }
+                const r = await fetch(CONFIG.API_URL + path, opt);
+                if (r.status === 401) {
+                    // Токен истёк или недействителен
+                    App.Auth.logout();
+                    throw new Error('Требуется авторизация');
+                }
+                const d = await r.json().catch(()=>({}));
+                if (!r.ok) throw new Error(d.error || 'Ошибка сервера');
+                return d;
             }
         }
 
@@ -1432,14 +1445,18 @@
          */
         const App = {
             
-            // --- 1. АВТОРЗИАЦИЯ ---
+            // --- 1. АВТОРИЗАЦИЯ (ИЗМЕНЕНА) ---
             Auth: {
                 isReg: false,
                 check: function() {
-                    const u = localStorage.getItem(CONFIG.KEY_USER);
-                    if(u) {
-                        try { Store.me = JSON.parse(u); App.UI.boot(); }
-                        catch(e){ this.logout(); }
+                    const saved = localStorage.getItem(CONFIG.KEY_USER);
+                    const token = localStorage.getItem(CONFIG.KEY_TOKEN);
+                    if (saved && token) {
+                        try {
+                            Store.me = JSON.parse(saved);
+                            Store.token = token;
+                            App.UI.boot();
+                        } catch(e) { this.logout(); }
                     } else {
                         document.getElementById('auth-view').classList.remove('d-none');
                     }
@@ -1462,38 +1479,60 @@
                     try {
                         const r = await Api.req(this.isReg ? '/register' : '/login', 'POST', {username:u, password:p});
                         Store.me = { id: r.user_id, username: r.username||u, bio: r.bio||'', avatar_data: r.avatar_data||'' };
+                        Store.token = r.token;
                         localStorage.setItem(CONFIG.KEY_USER, JSON.stringify(Store.me));
+                        localStorage.setItem(CONFIG.KEY_TOKEN, Store.token);
                         Toast.show('Успешно!', 'success');
                         App.UI.boot();
                     } catch(e) { Toast.show(e.message, 'error'); }
                     finally { btn.disabled = false; btn.innerText = this.isReg?'Создать аккаунт':'Войти'; }
                 },
-                logout: function() {
+                logout: async function() {
+                    try {
+                        if (Store.token) {
+                            await Api.req('/logout', 'POST');
+                        }
+                    } catch(e) {}
                     localStorage.removeItem(CONFIG.KEY_USER);
+                    localStorage.removeItem(CONFIG.KEY_TOKEN);
                     window.location.reload();
                 }
             },
 
-            // --- 2. МЕДИА И ФАЙЛЫ ---
+            // --- 2. МЕДИА И ФАЙЛЫ (ИЗМЕНЕНО) ---
             Media: {
-                handleSelect: function(e) {
-                    const f = e.target.files[0]; if(!f) return;
-                    if(f.size/(1024*1024) > CONFIG.MAX_FILE_MB) return Toast.show(`Лимит ${CONFIG.MAX_FILE_MB}МБ`,'error');
+                handleSelect: async function(e) {
+                    const f = e.target.files[0];
+                    if (!f) return;
+                    if (f.size/(1024*1024) > CONFIG.MAX_FILE_MB) return Toast.show(`Лимит ${CONFIG.MAX_FILE_MB}МБ`,'error');
                     
-                    const r = new FileReader();
-                    r.onload = ev => {
-                        Store.media.base64 = ev.target.result;
-                        Store.media.type = f.type.startsWith('video') ? 'video' : 'image';
+                    const formData = new FormData();
+                    formData.append('file', f);
+                    
+                    try {
+                        Toast.show('Загрузка файла...', 'info');
+                        const r = await Api.req('/upload_media', 'POST', formData, false);
+                        Store.media.url = r.url;
+                        Store.media.type = r.media_type;
                         Store.media.name = f.name;
                         
                         document.getElementById('media-preview-panel').style.display = 'flex';
                         document.getElementById('media-preview-name').innerText = f.name;
-                        document.getElementById('media-preview-img').src = Store.media.type==='image' ? Store.media.base64 : 'https://cdn-icons-png.flaticon.com/512/4404/4404094.png';
-                    };
-                    r.readAsDataURL(f);
+                        const previewImg = document.getElementById('media-preview-img');
+                        if (Store.media.type === 'image') {
+                            previewImg.src = r.url;
+                        } else {
+                            previewImg.src = 'https://cdn-icons-png.flaticon.com/512/4404/4404094.png';
+                        }
+                        Toast.show('Файл загружен', 'success');
+                    } catch(e) {
+                        Toast.show('Ошибка загрузки: ' + e.message, 'error');
+                    } finally {
+                        document.getElementById('file-input').value = '';
+                    }
                 },
                 clear: function() {
-                    Store.media = {base64:null, type:null, name:''};
+                    Store.media = {url: null, type: null, name: ''};
                     document.getElementById('media-preview-panel').style.display = 'none';
                     document.getElementById('file-input').value = '';
                 }
@@ -1522,7 +1561,7 @@
                     try {
                         // ОТПРАВЛЯЕМ АВАТАРКУ И ДАННЫЕ НА БЭКЕНД
                         await Api.req('/update_profile', 'POST', {
-                            user_id: Store.me.id, username: n, bio: b, avatar_data: Store.me.avatar_data
+                            username: n, bio: b, avatar_data: Store.me.avatar_data
                         });
                         Store.me.username = n; Store.me.bio = b;
                         localStorage.setItem(CONFIG.KEY_USER, JSON.stringify(Store.me));
@@ -1533,11 +1572,11 @@
                 }
             },
 
-            // --- 4. ЧАТЫ ---
+            // --- 4. ЧАТЫ (ИЗМЕНЕНА ОТПРАВКА) ---
             Chat: {
                 loadList: async function() {
                     try {
-                        Store.users = await Api.req(`/chats_summary?user_id=${Store.me.id}`);
+                        Store.users = await Api.req(`/chats_summary`);
                         this.filter(document.getElementById('search-input').value);
                     } catch(e) {}
                 },
@@ -1614,8 +1653,8 @@
                 },
                 fetchMsgs: async function() {
                     if(!Store.me) return;
-                    let p = `/messages?user_id=${Store.me.id}`;
-                    if(Store.activeId) p+=`&receiver_id=${Store.activeId}`;
+                    let p = `/messages`;
+                    if(Store.activeId) p+=`?receiver_id=${Store.activeId}`;
                     try {
                         const m = await Api.req(p);
                         this.renderMsgs(m);
@@ -1637,12 +1676,16 @@
                         row.className = `msg-row ${isMine?'out':'in'}`;
                         
                         let media = '';
-                        if(m.media_type==='image') media = `<img src="${m.media_data}" class="msg-media-item" onclick="App.UI.Lightbox.open(this.src)">`;
-                        if(m.media_type==='video') media = `<video src="${m.media_data}" class="msg-media-item" controls></video>`;
+                        if (m.media_url) {
+                            if (m.media_type === 'image') {
+                                media = `<img src="${m.media_url}" class="msg-media-item" onclick="App.UI.Lightbox.open(this.src)">`;
+                            } else if (m.media_type === 'video') {
+                                media = `<video src="${m.media_url}" class="msg-media-item" controls></video>`;
+                            }
+                        }
 
                         const time = new Date(m.timestamp+'Z').toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
                         
-                        // Имя отправителя с глобальной авой(по клику)
                         let sender = '';
                         if(!isMine && Store.activeId===null) {
                             sender = `<div class="msg-sender-name" onclick="App.UI.Modals.openProfile(${m.sender_id})">${Utils.sanitize(m.sender_name)}</div>`;
@@ -1658,19 +1701,22 @@
                 send: async function() {
                     const inp = document.getElementById('msg-input');
                     const txt = inp.value.trim();
-                    if(!txt && !Store.media.base64) return;
+                    if(!txt && !Store.media.url) return;
                     
                     const btn = document.getElementById('btn-send');
                     inp.disabled = true; btn.style.opacity = '0.5';
                     
                     try {
                         await Api.req('/messages', 'POST', {
-                            sender_id: Store.me.id, receiver_id: Store.activeId,
-                            text: txt, media_type: Store.media.type, media_data: Store.media.base64
+                            receiver_id: Store.activeId,
+                            text: txt,
+                            media_url: Store.media.url,
+                            media_type: Store.media.type
                         });
-                        inp.value = ''; inp.style.height='auto'; App.Media.clear();
+                        inp.value = ''; inp.style.height='auto';
+                        App.Media.clear();
                         await this.fetchMsgs();
-                        this.loadList(); // Обновление для поднятия чата наверх
+                        this.loadList();
                     } catch(e) { Toast.show('Ошибка отправки','error'); }
                     finally { inp.disabled = false; btn.style.opacity = '1'; inp.focus(); }
                 },
